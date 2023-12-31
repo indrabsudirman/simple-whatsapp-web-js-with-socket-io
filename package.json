@@ -1,0 +1,22 @@
+{
+  "name": "simple-whatsapp-web-js-with-socket-io",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "setup-project": "npm i && cd frontend && npm i",
+    "setup-production-app": "npm i && cd frontend && npm i && npm run build ",
+    "server": "nodemon index",
+    "client": "cd frontend && npm run dev",
+    "dev": "concurrently --kill-others-on-fail \"npm run server\" \"npm run client\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.2",
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}
