@@ -5,7 +5,7 @@ import QRCode from "react-qr-code";
 const socket = io("http://localhost:3000", {});
 
 function App() {
-  const [session, setSession] = useState("");
+  const [session, setSession] = useState("089636002345");
   const [qrCode, setQrCode] = useState("");
 
   useEffect(() => {
