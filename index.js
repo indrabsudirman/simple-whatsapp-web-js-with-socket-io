@@ -21,7 +21,7 @@ let store;
 mongoose.connect(MONGO_DB_LOCAL).then(() => {
   console.log(`Connected to MongoDB`);
   store = new MongoStore({ mongoose: mongoose });
-  console.log(store);
+  // console.log(store);
 });
 
 app.get("/", (req, res) => {
@@ -35,6 +35,7 @@ server.listen(port, () => {
 const allSessionsObject = {};
 
 const createWhatsappSession = (id, socket) => {
+  console.log(`Create whatsapp session id ${id}`);
   const client = new Client({
     puppeteer: {
       headless: true,
@@ -47,7 +48,7 @@ const createWhatsappSession = (id, socket) => {
   });
 
   client.on("qr", (qr) => {
-    console.log("QR RECEIVED", qr);
+    console.log("QR RECEIVED 1", qr);
     socket.emit("qr", {
       qr,
     });
@@ -65,35 +66,59 @@ const createWhatsappSession = (id, socket) => {
 
   client.on("remote_session_saved", () => {
     console.log(`Remote session saved`);
+    socket.emit("remote_session_saved", {
+      message: "remote_session_saved",
+    });
   });
 
   client.initialize();
 };
 
-const getWhatsappSession = (id, socket) => {
-  const client = new Client({
-    puppeteer: {
-      headless: true,
-    },
-    authStrategy: new RemoteAuth({
-      clientId: id,
-      store: store,
-      backupSyncIntervalMs: 300000,
-    }),
-  });
+const getWhatsappSession = async (id, socket) => {
+  console.log(`Get whatsapp session id ${id}`);
 
-  client.on("ready", () => {
-    console.log(`Client is ready`);
-    socket.emit("ready", { id, message: `Client ${client} is ready` });
-  });
-
-  client.on("qr", (qr) => {
-    console.log("QR RECEIVED", qr);
-    socket.emit("qr", {
-      qr,
-      message: "Here is the QR, because user has logged out",
+  try {
+    const sessionExist = await store.sessionExists({
+      session: `RemoteAuth-${id}`,
     });
-  });
+    console.log(sessionExist);
+    if (sessionExist) {
+      console.log(`Session with id ${id} already exists in the store.`);
+      return;
+    }
+
+    const client = new Client({
+      puppeteer: {
+        headless: true,
+      },
+      authStrategy: new RemoteAuth({
+        clientId: id,
+        store: store,
+        backupSyncIntervalMs: 300000,
+      }),
+    });
+
+    client.on("authenticated", () => {
+      console.log(`Client authenticated`);
+    });
+
+    client.on("ready", () => {
+      console.log(`Client is ready`);
+      socket.emit("ready", { id, message: `Client ${client} is ready` });
+    });
+
+    client.on("qr", (qr) => {
+      console.log("QR RECEIVED 2", qr);
+      socket.emit("qr", {
+        qr,
+        message: "Here is the QR, because user has logged out",
+      });
+    });
+
+    client.initialize();
+  } catch (error) {
+    console.error(`Error checking session existence: ${error.message}`);
+  }
 };
 
 io.on("connection", (socket) => {
@@ -117,7 +142,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("getSession", (data) => {
-    console.log(`Data is ${data}`);
+    console.log(`Get old session will start with is ${data.id} in server`);
     const { id } = data;
     getWhatsappSession(id, socket);
   });

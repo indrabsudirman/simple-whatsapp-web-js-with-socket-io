@@ -7,6 +7,7 @@ const socket = io("http://localhost:3000", {});
 function App() {
   const [session, setSession] = useState("089636002345");
   const [qrCode, setQrCode] = useState("");
+  const [oldSessionID, setOldSessionID] = useState("");
 
   useEffect(() => {
     socket.emit("connected", "Hello from client");
@@ -14,9 +15,14 @@ function App() {
       console.log(`connect from ${socket.id}`);
     });
     socket.on("qr", (data) => {
-      const { qr } = data;
+      const { qr, message } = data;
       console.log(`Qr received from BE ${qr}`);
+      console.log(`Qr received from BE with message ${message}`);
       setQrCode(qr);
+    });
+    socket.on("remote_session_saved", (data) => {
+      const { message } = data;
+      console.log(`remote_session_saved ${message}`);
     });
   }, []);
 
@@ -28,9 +34,27 @@ function App() {
     console.log(`Create session start with id ${session}`);
   };
 
+  const getOldSession = () => {
+    socket.emit("getSession", { id: oldSessionID });
+    setOldSessionID("");
+    console.log(`Get old session will start with id ${oldSessionID}`);
+  };
+
   return (
     <>
       <h1>Whatsapp Web JS with ChatGPT</h1>
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          value={oldSessionID}
+          onChange={(e) => {
+            setOldSessionID(e.target.value);
+          }}
+        />
+      </div>
+      <div style={{ marginBottom: "20px" }}>
+        <button onClick={getOldSession}>Get Old Session</button>
+      </div>
       <div style={{ marginBottom: "20px" }}>
         <input
           type="text"
