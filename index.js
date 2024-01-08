@@ -147,12 +147,13 @@ io.on("connection", (socket) => {
     getWhatsappSession(id, socket);
   });
 
-  socket.on("getAllChats", (data) => {
+  socket.on("getAllChats", async (data) => {
     console.log(`get All Chats $(data)`)
     const { id } = data;
     const client = allSessionsObject[id]
-    client.getChats().then((chats) => {
-      socket.emit("allChats", (chats))
+    const allChats = await client.getChats()
+    socket.emit("allChats", {
+      allChats
     })
   })
 });
