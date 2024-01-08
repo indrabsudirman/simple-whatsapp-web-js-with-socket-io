@@ -1,6 +1,6 @@
 import express from "express";
 import pkg from "whatsapp-web.js";
-const { Client, LocalAuth, RemoteAuth } = pkg;
+const { Client, RemoteAuth } = pkg;
 const app = express();
 const port = 3000;
 
@@ -146,4 +146,13 @@ io.on("connection", (socket) => {
     const { id } = data;
     getWhatsappSession(id, socket);
   });
+
+  socket.on("getAllChats", (data) => {
+    console.log(`get All Chats $(data)`)
+    const { id } = data;
+    const client = allSessionsObject[id]
+    client.getChats().then((chats) => {
+      socket.emit("allChats", (chats))
+    })
+  })
 });
