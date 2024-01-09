@@ -1,6 +1,6 @@
 import express from "express";
 import pkg from "whatsapp-web.js";
-const { Client, RemoteAuth } = pkg;
+const { Client, LocalAuth, RemoteAuth } = pkg;
 const app = express();
 const port = 3000;
 
@@ -84,7 +84,6 @@ const getWhatsappSession = async (id, socket) => {
     console.log(sessionExist);
     if (sessionExist) {
       console.log(`Session with id ${id} already exists in the store.`);
-      return;
     }
 
     const client = new Client({
@@ -148,12 +147,14 @@ io.on("connection", (socket) => {
   });
 
   socket.on("getAllChats", async (data) => {
-    console.log(`get All Chats $(data)`)
+    console.log(`Get All Chats ${data}`);
     const { id } = data;
-    const client = allSessionsObject[id]
-    const allChats = await client.getChats()
-    socket.emit("allChats", {
-      allChats
-    })
-  })
+    console.log(`Data id from FE for get All Chats ${id}`);
+    const client = allSessionsObject[id];
+    const chats = await client.getChats();
+    console.log(chats);
+    socket.emit("getChats", {
+      chats,
+    });
+  });
 });
